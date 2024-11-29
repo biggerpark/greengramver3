@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.green.greengramver2.feed.FeedPicsMapper">
+    <insert id="insFeedPics">
+        INSERT INTO feed_pics
+        (feed_id,pic)
+        VALUES
+        <foreach collection="pics" item="pic" open="(" close=")" separator="),("> <!-- pics 를 pic 에 하나하나 담겠다 -->
+            #{feedId},#{pic}
+        </foreach>
+
+        <!--
+
+        <foreach collection="pics" item="pic" separator=",">
+            (#{feedId},#{pic})
+        </foreach>
+
+        이렇게 쓸 수도 있다.
+        -->
+    </insert>
+
+    <select id="selFeedPicList">
+        SELECT pic
+        FROM feed_pics
+        WHERE feed_id=#{feedId}
+    </select>
+
+
+</mapper>
