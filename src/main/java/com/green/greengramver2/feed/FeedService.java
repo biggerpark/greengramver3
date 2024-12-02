@@ -1,6 +1,10 @@
 package com.green.greengramver2.feed;
 
 import com.green.greengramver2.common.MyFileUtils;
+import com.green.greengramver2.feed.comment.FeedCommentMapper;
+import com.green.greengramver2.feed.comment.model.FeedCommentDto;
+import com.green.greengramver2.feed.comment.model.FeedCommentGetReq;
+import com.green.greengramver2.feed.comment.model.FeedCommentGetRes;
 import com.green.greengramver2.feed.model.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +26,7 @@ public class FeedService {
     private final MyFileUtils fileUtils;
     private final FeedMapper feedMapper;
     private final FeedPicsMapper feedPicsMapper;
+    private final FeedCommentMapper feedCommentMapper;
 
 
     public FeedPostRes postFeed(List<MultipartFile> pics, FeedPostReq p){
@@ -80,6 +85,7 @@ public class FeedService {
 
 
     public List<FeedGetRes> getFeedList(FeedGetReq p){
+        //N+1 이슈 발생
         List<FeedGetRes> list=feedMapper.selFeedList(p);
 
 
@@ -87,6 +93,24 @@ public class FeedService {
         for(FeedGetRes feedGetRes:list){
 
             feedGetRes.setPics(feedPicsMapper.selFeedPicList(feedGetRes.getFeedId())); //FeedGetRes 멤버필드인 List<String> pics 에 데이터를 넣어줌.
+
+
+            //피드 당 댓글 4개
+
+            FeedCommentGetReq commentGetReq=new FeedCommentGetReq();
+            commentGetReq.setPage(1); //피드 리스트 가져올때, 피드당 3개의 댓글
+            commentGetReq.setFeedId(feedGetRes.getFeedId());
+
+            List<FeedCommentDto> commentList=feedCommentMapper.selFeedCommentListByFeedId(commentGetReq);
+
+            FeedCommentGetRes commentGetRes=new FeedCommentGetRes();
+            commentGetRes.setCommentList(commentList);
+            commentGetRes.setMoreComment(commentList.size()==4); // 4개면 true, 4개 아니면 false
+
+            if(commentGetRes.isMoreComment()){
+                commentList.remove(commentList.size()-1); // 댓글 4개가 되면 마지막 댓글 삭제하고, 나중에 isMore 처리해주려고 이렇게 한것.
+            }
+            feedGetRes.setComment(commentGetRes); // 댓글 리스트를 각 피드에 할당해줌.
 
         }
 

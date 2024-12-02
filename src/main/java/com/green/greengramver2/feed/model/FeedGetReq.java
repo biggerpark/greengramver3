@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.BindParam;
 @ToString(callSuper = true) // 자식 객체에 이 에노테이션을 달아주면, 부모에객체에도 ToString 이 적용된다.
 public class FeedGetReq extends Paging {
 
+
+    //swagger 에서 signed_user_id 로 데이터를 보내야하기 때문에, 반드시 name=signed_user_id 를 적어줘야한다.
     @Schema(title = "로그인 유저 PK",name="signed_user_id", requiredMode = Schema.RequiredMode.REQUIRED)
     private long signedUserId; //좋아요 기능 받기 위해 userId 데이터를 멤버필드에 추가
 

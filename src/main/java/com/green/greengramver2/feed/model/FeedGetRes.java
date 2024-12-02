@@ -1,5 +1,7 @@
 package com.green.greengramver2.feed.model;
 
+import com.green.greengramver2.feed.comment.model.FeedCommentDto;
+import com.green.greengramver2.feed.comment.model.FeedCommentGetRes;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -20,5 +22,6 @@ public class FeedGetRes {
 
     // pics 가 여러개이므로 1대n 관계라는 것을 알 수 있다.
     private List<String> pics=new ArrayList<>();
+    private FeedCommentGetRes comment;
 
 }
