@@ -4,9 +4,9 @@
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 
-<mapper namespace="com.green.greengramver2.feed.comment.FeedCommentMapper">
+<mapper namespace="com.green.greengram.feed.comment.FeedCommentMapper">
     <insert id="insFeedComment" useGeneratedKeys="true" keyProperty="feedCommentId">
-        INSERT INTO feed_comments
+        INSERT INTO feed_comment
         SET  feed_id=#{feedId}
            , user_id=#{userId}
            ,`comment`=#{comment}
@@ -18,11 +18,18 @@
                 ,b.user_id as writerUserId
                 ,IF(b.nick_name is null,b.uid,b.nick_name) as writerNm
                 ,b.pic as writerPic
-        FROM feed_comments a
+        FROM feed_comment a
         INNER JOIN user b
         on a.user_id=b.user_id
         where a.feed_id=#{feedId}
         ORDER BY A.FEED_comment_ID DESC
         LIMIT #{startIdx},#{size}
     </select>
+
+    <delete id="delFeedComment">
+        DELETE
+        FROM feed_comment
+        WHERE feed_comment_id=#{feedCommentId}
+        AND user_id=#{userId}
+    </delete>
 </mapper>
