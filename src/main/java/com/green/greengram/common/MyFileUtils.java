@@ -14,43 +14,67 @@ import java.util.UUID;
 public class MyFileUtils {
     private final String uploadPath;
 
+    public String getUploadPath() {
+        return uploadPath;
+    }
 
     public MyFileUtils(@Value("${file.directory}") String uploadPath) { // Value 는 Springframework 를 호출해줘야 한다.
         this.uploadPath = uploadPath;
     }
 
     //해당경로에 파일 생성
-    public String makeFolders(String path){
-        File file = new File(uploadPath,path);
+    public String makeFolders(String path) {
+        File file = new File(uploadPath, path);
         file.mkdirs();
         return file.getAbsolutePath(); // 절대 경로 리턴
     }
 
     // 파일의 확장자 추출
-    public String getExt(String file){
-        int lastIdx=file.lastIndexOf(".");
+    public String getExt(String file) {
+        int lastIdx = file.lastIndexOf(".");
         return file.substring(lastIdx);
     }
 
     //랜덤 파일명 생성
-    public String randomFilName(){
+    public String randomFilName() {
         return UUID.randomUUID().toString();
     }
 
     //랜덤 파일명+확장자 만들기
-    public String randomExt(String file){
-        return randomFilName()+getExt(file);
+    public String randomExt(String file) {
+        return randomFilName() + getExt(file);
     }
 
     //파일을 원하는 path 경로에 저장하기
     public void transferTo(MultipartFile file, String path) throws IOException {
-        File dest = new File(uploadPath,path);
+        File dest = new File(uploadPath, path);
         file.transferTo(dest);
     }
 
     // MultiPartFile 타입으로 받은 파일을 랜덤한 이름과 확장자를 추출하기
-    public String randomEExt(MultipartFile file){
+    public String randomEExt(MultipartFile file) {
         return randomExt(file.getOriginalFilename());
+    }
+
+    //폴더삭제
+    public void deleteFolder(String path, boolean deleteRootFolder) { // 폴더 안에 있는 파일만 삭제.
+        File folder = new File(path);
+
+        if (folder.exists() && folder.isDirectory()) { // 폴더가 존재하면서 디렉토리인가?
+            File[] includedFiles = folder.listFiles(); // 파일 리스트 안에는 file 만 있을수도 있고, directory 일 수 있다.
+
+            for (File f : includedFiles) {
+                if (f.isDirectory()) { // f가 directory 인지, 아닌지 판단
+                    deleteFolder(f.getAbsolutePath(), true); // 재귀호출
+                } else {
+                    f.delete();
+                }
+            }
+            if (deleteRootFolder) {
+                folder.delete();
+            }
+        }
+
     }
 }
 

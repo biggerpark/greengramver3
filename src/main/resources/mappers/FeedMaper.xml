@@ -22,16 +22,16 @@
                 , B.pic as writerPic
                 , if(c.feed_id IS NULL,0,1) AS isLike
         FROM feed A
-        INNER JOIN user B
+        LEFT JOIN user B
         ON A.writer_user_id=B.user_id
         Left JOIN feed_like c
         ON c.feed_id=a.feed_id
         AND c.user_id=#{signedUserId}
-        ORDER BY A.feed_id DESC
+        <if test="profileUserId !=null and profileUserId !=''">
+            WHERE B.user_id=#{profileUserId}
+        </if>
+        ORDER BY A.feed_id DES
         LIMIT #{startIdx},#{size}
     </select>
-
-
-
 
 </mapper>

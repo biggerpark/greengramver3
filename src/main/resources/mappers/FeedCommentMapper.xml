@@ -32,4 +32,6 @@
         WHERE feed_comment_id=#{feedCommentId}
         AND user_id=#{userId}
     </delete>
+
+
 </mapper>
