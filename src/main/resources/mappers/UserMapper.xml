@@ -24,7 +24,9 @@
 
 
     <select id="selUserInfo">
-        SELECT A.user_id AS userId, A.pic, A.created_at AS createdAt
+        SELECT A.user_id AS userId
+        , A.pic
+        , A.created_at AS createdAt
         , IF(A.nick_name IS NULL, A.uid, A.nick_name) AS nickName
         , COUNT(DISTINCT F1.from_user_id, F1.to_user_id) AS `follower`
         , COUNT(DISTINCT F2.from_user_id, F2.to_user_id) AS `following`

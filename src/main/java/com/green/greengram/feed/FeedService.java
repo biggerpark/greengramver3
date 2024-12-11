@@ -14,7 +14,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +28,7 @@ public class FeedService {
     private final FeedMapper feedMapper;
     private final FeedPicsMapper feedPicsMapper;
     private final FeedCommentMapper feedCommentMapper;
+    private final MyFileUtils myFileUtils;
 
 
     public FeedPostRes postFeed(List<MultipartFile> pics, FeedPostReq p){
@@ -116,6 +119,138 @@ public class FeedService {
 
 
         return list; //FeedGetRes 로 이루어진 리스트를 리턴해줌.
+    }
+
+    //select 2번
+    public List<FeedGetRes> getFeedList2(FeedGetReq p){
+
+
+
+       return null;
+
+
+    }
+
+    //select 3번
+    public List<FeedGetRes> getFeedList3(FeedGetReq p) {
+        //피드 리스트
+        log.info("FeedGetReq : {}",p);
+        List<FeedGetRes> list = feedMapper.selFeedList(p);
+        log.info("FeedGetResList : {} ", list);
+        //feed_id 를 골라내야한다.
+//        List<Long> feedIds=list.stream().map(FeedGetRes::getFeedId).toList(); 밑의 3줄 코드와 같다.
+
+        List<Long> feedIds = new ArrayList<>(); // feedId 만 골라내서 따로 리스트를 만들어줄것이다.
+
+        for (FeedGetRes feedGetRes : list) {
+            feedIds.add(feedGetRes.getFeedId());
+        }
+
+        log.info("feedIds:{}", feedIds);
+
+
+        //피드와 관련된 사진 리스트
+        List<FeedPicSel> feedPicList = feedPicsMapper.selFeedPicListByFeedIds(feedIds);
+        log.info("FeedPicList:{}", feedPicList);
+
+
+        //피드와 피드와관련된 사진리스트를 매핑시키자
+        Map<Long,List<String>> picHashMap=new HashMap<>(); // key 인 Long 타입에 value 인 List<String> 타입을 넣어줌
+
+        for(FeedPicSel item:feedPicList){
+            long feedId=item.getFeedId(); // 피드와 관련된 사진 리스트의 feedId 값 가져옴
+            if(!picHashMap.containsKey(feedId)){ // feedId 가 있는지 체크
+                picHashMap.put(feedId,new ArrayList<String>());
+            }
+            List<String> pics=picHashMap.get(feedId); // feedId 에 해당하는 ArrayList, 즉 List<String> pics=new ArrayList<>() 이렇게 됨.
+            pics.add(item.getPic());
+        }
+
+        for(FeedGetRes res:list){
+            res.setPics(picHashMap.get(res.getFeedId()));
+        }
+
+
+
+
+
+//        int lastIndex=0;
+//        for(FeedGetRes res:list){
+//            List<String> pics=new ArrayList<>();
+//            for(int i=lastIndex;i<feedPicList.size();i++){
+//                FeedPicSel feedPicSel=feedPicList.get(i);
+//                if(res.getFeedId()==feedPicSel.getFeedId()){
+//                    pics.add(feedPicSel.getPic());
+//                }else{
+//                    res.setPics(pics);
+//                    lastIndex=i;
+//                    break;
+//                }
+//            }
+//        }
+
+
+        log.info("list:{}",list);
+
+
+        //피드와 관련된 댓글 리스트
+
+        List<FeedCommentDto> feedCommentDtoList = feedCommentMapper.selFeedCommentListByFeedIds(feedIds);
+
+
+        Map<Long, FeedCommentGetRes> commentMap = new HashMap<>();
+        for(FeedCommentDto dto : feedCommentDtoList){
+            long feedId = dto.getFeedId();
+            if(!commentMap.containsKey(feedId)){
+                FeedCommentGetRes feedCommentGetRes = new FeedCommentGetRes();
+                feedCommentGetRes.setCommentList(new ArrayList<>());
+                commentMap.put(feedId, feedCommentGetRes);
+            }
+            FeedCommentGetRes feedCommentGetRes = commentMap.get(feedId);
+            feedCommentGetRes.getCommentList().add(dto);
+        }
+
+        for(FeedGetRes r : list){
+            r.setPics(picHashMap.get(r.getFeedId()));
+            FeedCommentGetRes feedCommentGetRes = commentMap.get(r.getFeedId());
+
+            if(feedCommentGetRes == null){
+                feedCommentGetRes = new FeedCommentGetRes();
+                feedCommentGetRes.setCommentList(new ArrayList<>());
+            } else if(feedCommentGetRes.getCommentList().size()==4){
+                feedCommentGetRes.setMoreComment(true);
+                feedCommentGetRes.getCommentList().remove(feedCommentGetRes.getCommentList().size()-1);
+            }
+            r.setComment(feedCommentGetRes);
+        }
+
+
+
+
+
+
+
+
+        return list;
+
+    }
+
+
+
+
+    @Transactional
+    public int deleteFeed(FeedDeleteReq p){
+        //피드 댓글,좋아요,사진 삭제
+        int affectedRows=feedMapper.delFeedLikeAndFeedCommentAndFeedPic(p);
+
+        //피드 삭제
+        int affectedRowsFeed=feedMapper.delFeed(p);
+
+        String deletePath=String.format("%s/feed/%d",myFileUtils.getUploadPath(),p.getFeedId());
+        myFileUtils.deleteFolder(deletePath,true);
+
+        return 1;
+
     }
 
 }

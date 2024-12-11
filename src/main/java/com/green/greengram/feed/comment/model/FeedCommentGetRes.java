@@ -13,7 +13,6 @@ public class FeedCommentGetRes {
   private boolean moreComment;
   @Schema(title = "댓글")
   private List<FeedCommentDto> commentList;
-
 }
 
 
